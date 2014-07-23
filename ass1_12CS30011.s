@@ -1,8 +1,10 @@
-	.file	"ass1_12CS30011.c"
-	.text
+	.file	"ass1_12CS30011.c"  # name of the file
+	.text                     # what follows must be considered assembly instructions 
 .Ltext0:
 	.section	.rodata
 	.align 4
+
+	# string constants are defined
 .LC0:
 	.string	"Enter the order of the square matrix: "
 .LC1:
@@ -17,8 +19,9 @@
 .LC5:
 	.string	"In cs order:"
 	.text
-	.globl	main
-	.type	main, @function
+	.globl	main  # indicates that main should be accessible outside the file
+	              # useful in linking etc
+	.type	main, @function   #main is a function
 main:
 .LFB0:
 	.file 1 "ass1_12CS30011.c"
