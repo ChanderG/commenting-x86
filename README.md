@@ -2,11 +2,12 @@
 
 ###What?
 See specifications in Assignment1.pdf
+The important file here is cass1.s meaning commented-ass1.s
 
 ###Build Instructions
 
 ```
-cc -Wall -g -S -m32 ass1.c
+cc -Wall -g -S -m32 -fno-asynchronous-unwind-tables ass1.c
 ```
 creates the base ass1.s program for 32 bit machine.
 
