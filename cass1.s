@@ -248,12 +248,12 @@ po:
 	cmpl	20(%ebp), %eax    # compare index var and n-1
 	jne	.L21                # jump to L21 if inde != n-1
 
-	movl	$0, 12(%esp)
-	movl	$2, 8(%esp)
+	movl	$0, 12(%esp)    # param 4 : 0
+	movl	$2, 8(%esp)     # param 3 : 2
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)
+	movl	%eax, 4(%esp)   # param 2 : data 
 	movl	8(%ebp), %eax
-	movl	%eax, (%esp)
+	movl	%eax, (%esp)    # param 1 : n
 	call	po
 
 	jmp	.L14
