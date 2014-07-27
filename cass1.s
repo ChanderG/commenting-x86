@@ -1,7 +1,10 @@
+# Chander G -- 27/07/14 -- chandergovind@gmail.com 
 # 12CS30011 - Commenting x86 assembly code	
 	.file	"ass1.c"
 	.section	.rodata  # read only data section begins
-	.align 4
+	.align 4           # instruction to use 4 byte word for everything 
+
+# all string constants needed in the program	
 .LC0:
 	.string	"Enter the order of the square matrix: "
 .LC1:
@@ -65,19 +68,19 @@ main:
 .L4:                 
   # scanf pattern with 2d array address
 	movl	1624(%esp), %edx  # copy i to edx
-	movl	%edx, %eax        # copy edx to eax 
-	sall	$2, %eax   
-	addl	%edx, %eax
-	sall	$2, %eax
-	movl	%eax, %edx
-	movl	1628(%esp), %eax
-	addl	%edx, %eax
-	leal	0(,%eax,4), %edx
-	leal	20(%esp), %eax
+	movl	%edx, %eax        # eax -> i
+	sall	$2, %eax          # eax -> 4i 
+	addl	%edx, %eax        # eax -> 4i + i -> 5i
+	sall	$2, %eax          # eax -> 4*5i -> 20i
+	movl	%eax, %edx        # edx -> 20i
+	movl	1628(%esp), %eax  # j
+	addl	%edx, %eax        # eax -> j + 20i  
+	leal	0(,%eax,4), %edx  # address of 4(20i + j) where 4 stands for 4 bytes
+	leal	20(%esp), %eax    # standard adjustment of 20
 	addl	%eax, %edx
 	movl	$.LC1, %eax
-	movl	%edx, 4(%esp)
-	movl	%eax, (%esp)
+	movl	%edx, 4(%esp)   # second param : &data[i][j] 
+	movl	%eax, (%esp)     # first param : the string LC1
 	call	__isoc99_scanf
 
 	addl	$1, 1628(%esp)   # increment j
@@ -103,17 +106,19 @@ main:
 .L9:
 	movl	$0, 1628(%esp)     # set j = 0
 	jmp	.L7                  # jump to L7
-.L8:
-	movl	1624(%esp), %edx   # copy i to edx
-	movl	%edx, %eax         # copy edx to eax
-	sall	$2, %eax
-	addl	%edx, %eax
-	sall	$2, %eax
-	addl	1628(%esp), %eax
-	movl	20(%esp,%eax,4), %edx   
+.L8: 
+	movl	1624(%esp), %edx       # copy i to edx
+	movl	%edx, %eax             # copy edx to eax
+	sall	$2, %eax               # 4i
+	addl	%edx, %eax             # 5i 
+	sall	$2, %eax               # 20i
+	addl	1628(%esp), %eax       # 20i + j
+	movl	20(%esp,%eax,4), %edx  # 20 + 4(20i + j) 
+	                             # the structure is very similar to scanf before  
+	                             # notice the lack of leal 
 	movl	$.LC4, %eax
-	movl	%edx, 4(%esp)
-	movl	%eax, (%esp)
+	movl	%edx, 4(%esp)          # param 2 : data[i][j]
+	movl	%eax, (%esp)           # param 1 : string LC4 
 	call	printf
 
 	addl	$1, 1628(%esp)      # increment j by one
@@ -248,12 +253,12 @@ po:
 	cmpl	20(%ebp), %eax    # compare index var and n-1
 	jne	.L21                # jump to L21 if inde != n-1
 
-	movl	$0, 12(%esp)    # param 4 : 0
-	movl	$2, 8(%esp)     # param 3 : 2
+	movl	$0, 12(%esp)      # param 4 : 0
+	movl	$2, 8(%esp)       # param 3 : 2
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)   # param 2 : data 
+	movl	%eax, 4(%esp)     # param 2 : data 
 	movl	8(%ebp), %eax
-	movl	%eax, (%esp)    # param 1 : n
+	movl	%eax, (%esp)      # param 1 : n
 	call	po
 
 	jmp	.L14
@@ -263,18 +268,18 @@ po:
 	movl	20(%ebp), %edx         # ind copied to  edx
 	movl	(%eax,%edx,4), %edx    # edx -> eax + 4*edx
 	movl	$.LC4, %eax
-	movl	%edx, 4(%esp)  # param 2: data[0][ind] 
-	movl	%eax, (%esp)   # param 1: LC4 string
+	movl	%edx, 4(%esp)          # param 2: data[0][ind] 
+	movl	%eax, (%esp)           # param 1: LC4 string
 	call	printf
 
-	movl	20(%ebp), %eax  # copy ind to eax
+	movl	20(%ebp), %eax      # copy ind to eax
 	addl	$1, %eax
-	movl	%eax, 12(%esp)  # param 4 : ind + 1 
-	movl	$1, 8(%esp)     # param 3 : 1
+	movl	%eax, 12(%esp)      # param 4 : ind + 1 
+	movl	$1, 8(%esp)         # param 3 : 1
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)   # param 2 : data 
-	movl	8(%ebp), %eax   # n copied to eax
-	movl	%eax, (%esp)    # param 1 : n
+	movl	%eax, 4(%esp)       # param 2 : data 
+	movl	8(%ebp), %eax       # n copied to eax
+	movl	%eax, (%esp)        # param 1 : n
 	call	po
 
 	jmp	.L14
@@ -300,17 +305,18 @@ po:
 	jmp	.L14
 .L23:
   # else part of case 2
-	movl	20(%ebp), %edx
+	# same like commented before
+	movl	20(%ebp), %edx       # ind
 	movl	%edx, %eax
-	sall	$2, %eax
-	addl	%edx, %eax
-	sall	$4, %eax
-	addl	12(%ebp), %eax
-	movl	8(%ebp), %edx
-	subl	$1, %edx
-	movl	(%eax,%edx,4), %edx
+	sall	$2, %eax             # 4ind
+	addl	%edx, %eax           # 5ind 
+	sall	$4, %eax             # 80ind   
+	addl	12(%ebp), %eax       # data
+	movl	8(%ebp), %edx        # n
+	subl	$1, %edx             # n-1
+	movl	(%eax,%edx,4), %edx   
 	movl	$.LC4, %eax
-	movl	%edx, 4(%esp)
+	movl	%edx, 4(%esp)        # param 2 : data[ind][n-1] 
 	movl	%eax, (%esp)         # param 1 : string LC4
 	call	printf
 
@@ -344,18 +350,19 @@ po:
 	jmp	.L14
 .L25:
   # else part of case 3
-	movl	8(%ebp), %eax
-	leal	-1(%eax), %edx
-	movl	%edx, %eax
-	sall	$2, %eax
-	addl	%edx, %eax
-	sall	$4, %eax
-	addl	12(%ebp), %eax
-	movl	20(%ebp), %edx
-	movl	(%eax,%edx,4), %edx
+	# same like before
+	movl	8(%ebp), %eax           # n
+	leal	-1(%eax), %edx          # n-1
+	movl	%edx, %eax     
+	sall	$2, %eax                # 4(n-1) 
+	addl	%edx, %eax              # 5(n-1) 
+	sall	$4, %eax                # 80(n-1)
+	addl	12(%ebp), %eax          # 80(n-1) + data
+	movl	20(%ebp), %edx          # plus an ind 
+	movl	(%eax,%edx,4), %edx     # 4 byte for the whole thing 
 	movl	$.LC4, %eax
-	movl	%edx, 4(%esp)
-	movl	%eax, (%esp)
+	movl	%edx, 4(%esp)           # param 2 : data[n-1][ind]
+	movl	%eax, (%esp)            # param 1 : string LC4
 	call	printf
 
 	movl	20(%ebp), %eax
@@ -374,17 +381,18 @@ po:
 	cmpl	$0, 20(%ebp)     # compare ind and 0
 	je	.L28               # if equal go to L28
 .L27:
-  # else part of case 
-	movl	20(%ebp), %edx
+  # else part of case  4
+	# standard printf pattern
+	movl	20(%ebp), %edx    # ind   
 	movl	%edx, %eax
-	sall	$2, %eax
-	addl	%edx, %eax
-	sall	$4, %eax
-	addl	12(%ebp), %eax
+	sall	$2, %eax          # 4ind  
+	addl	%edx, %eax        # 5ind
+	sall	$4, %eax          # 80ind
+	addl	12(%ebp), %eax    # data
 	movl	(%eax), %edx
 	movl	$.LC4, %eax
-	movl	%edx, 4(%esp)
-	movl	%eax, (%esp)
+	movl	%edx, 4(%esp)     # param 2: data[ind][0]
+	movl	%eax, (%esp)      # param 1: the string LC4
 	call	printf
 
 	movl	20(%ebp), %eax
