@@ -67,6 +67,10 @@ main:
 	# body of first nested for loop
 .L4:                 
   # scanf pattern with 2d array address
+
+  # note sal => Shift Arithmetic Left
+	# equivalent to multiplying by 2 for each shift left
+
 	movl	1624(%esp), %edx  # copy i to edx
 	movl	%edx, %eax        # eax -> i
 	sall	$2, %eax          # eax -> 4i 
