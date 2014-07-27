@@ -154,6 +154,9 @@ main:
 
 	.text               # x86 instructions once more
 
+# for whatever reason : the variables passed to the function are accesible at 8 bytes + original location
+# must be due to function pointer
+
   #cs function begins
 	.globl	cs           
 	.type	cs, @function  
@@ -226,20 +229,25 @@ po:
 	cmpl	$2, %eax        # comp 2 and type 
 	jg	.L20              # if type > 2, go to L20
 
-	cmpl	$1, %eax
-	je	.L16
-	jmp	.L14
+	cmpl	$1, %eax        # if type == 1
+	je	.L16              # jumpt to L16
+	jmp	.L14              # jumpt to L14
 .L20:
 	cmpl	$3, %eax     # comp 3 and type 
-	je	.L18
+	je	.L18           # if type == 3, go to L18
+
 	cmpl	$4, %eax     # comp 4 and type 
-	je	.L19
-	jmp	.L14
+	je	.L19           # if type == 4, go to L19
+
+	jmp	.L14           # jump to L14
+
 .L16:
-	movl	8(%ebp), %eax
-	subl	$1, %eax
-	cmpl	20(%ebp), %eax
-	jne	.L21
+  # if type == 1
+	movl	8(%ebp), %eax     # copy n 
+	subl	$1, %eax          # eax -> n-1
+	cmpl	20(%ebp), %eax    # compare index var and n-1
+	jne	.L21                # jump to L21 if inde != n-1
+
 	movl	$0, 12(%esp)
 	movl	$2, 8(%esp)
 	movl	12(%ebp), %eax
@@ -247,41 +255,51 @@ po:
 	movl	8(%ebp), %eax
 	movl	%eax, (%esp)
 	call	po
+
 	jmp	.L14
 .L21:
-	movl	12(%ebp), %eax
-	movl	20(%ebp), %edx
-	movl	(%eax,%edx,4), %edx
+  # else part of case 1
+	movl	12(%ebp), %eax         # data param copied to eax
+	movl	20(%ebp), %edx         # ind copied to  edx
+	movl	(%eax,%edx,4), %edx    # edx -> eax + 4*edx
 	movl	$.LC4, %eax
-	movl	%edx, 4(%esp)
-	movl	%eax, (%esp)
+	movl	%edx, 4(%esp)  # param 2: data[0][ind] 
+	movl	%eax, (%esp)   # param 1: LC4 string
 	call	printf
-	movl	20(%ebp), %eax
+
+	movl	20(%ebp), %eax  # copy ind to eax
 	addl	$1, %eax
-	movl	%eax, 12(%esp)
-	movl	$1, 8(%esp)
+	movl	%eax, 12(%esp)  # param 4 : ind + 1 
+	movl	$1, 8(%esp)     # param 3 : 1
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)
-	movl	8(%ebp), %eax
-	movl	%eax, (%esp)
+	movl	%eax, 4(%esp)   # param 2 : data 
+	movl	8(%ebp), %eax   # n copied to eax
+	movl	%eax, (%esp)    # param 1 : n
 	call	po
+
 	jmp	.L14
+
 .L17:
+  # case 2
+	movl	8(%ebp), %eax   # n copied to eax
+	subl	$1, %eax        # eax -> eax -1 
+	cmpl	20(%ebp), %eax  # comparing ind and n-1 
+	jne	.L23              # if ind != n-1 jump to L23
+
+  # if part of case 2
 	movl	8(%ebp), %eax
 	subl	$1, %eax
-	cmpl	20(%ebp), %eax
-	jne	.L23
-	movl	8(%ebp), %eax
-	subl	$1, %eax
-	movl	%eax, 12(%esp)
-	movl	$3, 8(%esp)
+	movl	%eax, 12(%esp)   # param 4: n-1
+	movl	$3, 8(%esp)      # param 3: 3
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)
+	movl	%eax, 4(%esp)    # param 2: data
 	movl	8(%ebp), %eax
-	movl	%eax, (%esp)
+	movl	%eax, (%esp)     # param 1 : n
 	call	po
+
 	jmp	.L14
 .L23:
+  # else part of case 2
 	movl	20(%ebp), %edx
 	movl	%edx, %eax
 	sall	$2, %eax
@@ -293,32 +311,39 @@ po:
 	movl	(%eax,%edx,4), %edx
 	movl	$.LC4, %eax
 	movl	%edx, 4(%esp)
-	movl	%eax, (%esp)
+	movl	%eax, (%esp)         # param 1 : string LC4
 	call	printf
+
 	movl	20(%ebp), %eax
 	addl	$1, %eax
-	movl	%eax, 12(%esp)
-	movl	$2, 8(%esp)
+	movl	%eax, 12(%esp)       # param 4 : ind + 1
+	movl	$2, 8(%esp)          # param 3 : 2
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)
+	movl	%eax, 4(%esp)        # param 2 : data 
 	movl	8(%ebp), %eax
-	movl	%eax, (%esp)
+	movl	%eax, (%esp)         # param 1 : n
 	call	po
+
 	jmp	.L14
 .L18:
-	cmpl	$0, 20(%ebp)
-	jne	.L25
-	movl	8(%ebp), %eax
-	subl	$1, %eax
-	movl	%eax, 12(%esp)
-	movl	$4, 8(%esp)
+  # case 3
+	cmpl	$0, 20(%ebp)        # compare ind and 0  
+	jne	.L25                  # if not equal jump to L25
+
+  # if part of case 3
+	movl	8(%ebp), %eax       # copy n to eax
+	subl	$1, %eax            # eax -> eax - 1
+	movl	%eax, 12(%esp)      # param 4 : n - 1
+	movl	$4, 8(%esp)         # param 3 : 4
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)
+	movl	%eax, 4(%esp)       # param 2 : data
 	movl	8(%ebp), %eax
-	movl	%eax, (%esp)
+	movl	%eax, (%esp)        # param 1 : n
 	call	po
+
 	jmp	.L14
 .L25:
+  # else part of case 3
 	movl	8(%ebp), %eax
 	leal	-1(%eax), %edx
 	movl	%edx, %eax
@@ -332,20 +357,24 @@ po:
 	movl	%edx, 4(%esp)
 	movl	%eax, (%esp)
 	call	printf
+
 	movl	20(%ebp), %eax
 	subl	$1, %eax
-	movl	%eax, 12(%esp)
-	movl	$3, 8(%esp)
+	movl	%eax, 12(%esp)   # param 4 : ind - 1
+	movl	$3, 8(%esp)      # param 3 : 3
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)
+	movl	%eax, 4(%esp)    # param 2 : data 
 	movl	8(%ebp), %eax
-	movl	%eax, (%esp)
+	movl	%eax, (%esp)     # param 1 : n
 	call	po
+
 	jmp	.L14
 .L19:
-	cmpl	$0, 20(%ebp)
-	je	.L28
+  # case 4
+	cmpl	$0, 20(%ebp)     # compare ind and 0
+	je	.L28               # if equal go to L28
 .L27:
+  # else part of case 
 	movl	20(%ebp), %edx
 	movl	%edx, %eax
 	sall	$2, %eax
@@ -357,21 +386,24 @@ po:
 	movl	%edx, 4(%esp)
 	movl	%eax, (%esp)
 	call	printf
+
 	movl	20(%ebp), %eax
 	subl	$1, %eax
-	movl	%eax, 12(%esp)
-	movl	$4, 8(%esp)
+	movl	%eax, 12(%esp)    # param 4 : ind - 1
+	movl	$4, 8(%esp)       # param 3 : 4
 	movl	12(%ebp), %eax
-	movl	%eax, 4(%esp)
+	movl	%eax, 4(%esp)     # param 2 : data 
 	movl	8(%ebp), %eax
-	movl	%eax, (%esp)
+	movl	%eax, (%esp)      # param 1 : n
 	call	po
+
 	nop
 	jmp	.L14
 .L28:
-	nop
+  # if part of case 4
+	nop       # no operation          
 .L14:
-	leave
+	leave               # return from function
 	ret
 	.size	po, .-po
   # po function ends
